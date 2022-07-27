@@ -1,5 +1,5 @@
 {
-    "name": "Tests",
+    "name": "UniServiceLocator.Tests",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
