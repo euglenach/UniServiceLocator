@@ -68,6 +68,7 @@ namespace UniServiceLocator
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+        
         private readonly struct ServiceObject
         {
             public readonly WeakReference<object> @ref;
