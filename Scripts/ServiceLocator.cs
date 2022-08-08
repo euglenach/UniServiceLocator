@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UniServiceLocator
 {
-    public class Locator : ILocator
+    public class ServiceLocator : IServiceLocator
     {
         bool isDisposed;
         private readonly Dictionary<Type, ServiceObject> instanceContainer = new Dictionary<Type, ServiceObject>();
@@ -52,7 +52,8 @@ namespace UniServiceLocator
 
         protected virtual void Dispose(bool disposing)
         {
-            if(!disposing) return;
+            if(!disposing || isDisposed) return;
+            
             foreach(var instance in instanceContainer)
             {
                 if(!instance.Value.@ref.TryGetTarget(out var obj)) continue;
