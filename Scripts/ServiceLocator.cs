@@ -50,6 +50,10 @@ namespace UniServiceLocator
             return default;
         }
 
+        /// <summary>
+        /// Disposes of all IDisposable when disposed.
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if(!disposing || isDisposed) return;
