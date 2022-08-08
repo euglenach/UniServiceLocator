@@ -19,7 +19,14 @@ namespace UniServiceLocator
     
     public enum Bind
     {
+        /// <summary>
+        /// Generate a unique instance on registration.
+        /// </summary>
         Single,
+        
+        /// <summary>
+        /// instantiate on resolution.
+        /// </summary>
         Transient
     }
 }

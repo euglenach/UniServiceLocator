@@ -29,7 +29,7 @@ namespace UniServiceLocator
         }
 
         /// <summary>
-        /// Project Context ServiceLocator
+        /// Global Scope ServiceLocator.
         /// </summary>
         public static IServiceLocator Locator => inst.serviceLocator;
         
@@ -38,6 +38,7 @@ namespace UniServiceLocator
             if(_inst == null)
             {
                 _inst = this;
+                DontDestroyOnLoad(_inst.gameObject);
                 return;
             }
             
