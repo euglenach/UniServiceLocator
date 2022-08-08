@@ -1,5 +1,5 @@
 {
-    "name": "UniServiceLocator.Tests",
+    "name": "UniServiceLocator.Test-PlayMode",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
