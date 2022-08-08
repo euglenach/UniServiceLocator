@@ -1,4 +1,5 @@
 ﻿using System;
+using UniServiceLocator.Installers;
 using UnityEngine;
 
 namespace UniServiceLocator
@@ -6,6 +7,8 @@ namespace UniServiceLocator
     [DefaultExecutionOrder(-10000)]
     public class ProjectContext : MonoBehaviour
     {
+        [SerializeField] private MonoInstaller[] installers;
+        
         private readonly ServiceLocator serviceLocator = new ServiceLocator();
         
         private static ProjectContext _inst;
@@ -39,11 +42,21 @@ namespace UniServiceLocator
             {
                 _inst = this;
                 DontDestroyOnLoad(_inst.gameObject);
+                InstallBinding();
                 return;
             }
             
             Destroy(gameObject);
         }
 
+        private void InstallBinding()
+        {
+            if(installers == null) return;
+            
+            foreach(var installer in installers)
+            {
+                installer.InstallBinding(Locator);
+            }
+        }
     }
 }
