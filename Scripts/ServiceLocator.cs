@@ -3,45 +3,64 @@ using System.Collections.Generic;
 
 namespace UniServiceLocator
 {
-    public class ServiceLocator : IServiceLocator
+    /// <summary>
+    /// サービスロケーター
+    /// </summary>
+    public partial class ServiceLocator : IServiceLocator
     {
-        bool isDisposed;
-        private readonly Dictionary<Type, ServiceObject> instanceContainer = new Dictionary<Type, ServiceObject>();
+        public static readonly ServiceLocator Default = new();
+        
+        private readonly Dictionary<Type, ServiceObject> instanceContainer = new();
 
-        public void Register<T>(Bind mode = Bind.Single)
+        public void Register<T>(Bind mode = Bind.Single) where T : class
         {
             var instance = mode switch
             {
                 Bind.Single => Activator.CreateInstance<T>(),
-                Bind.Transient => default,
+                Bind.Transient => null,
                 _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
             };
-            instanceContainer[typeof(T)] = new ServiceObject(new WeakReference<object>(instance),mode);
+            instanceContainer[typeof(T)] = new ServiceObject(instance,mode);
         }
 
-        public void Register<T>(T instance)
+        public void Register(Type type, Bind mode = Bind.Single)
         {
-            instanceContainer[typeof(T)] = new ServiceObject(new WeakReference<object>(instance),Bind.Single);
+            var instance = mode switch
+            {
+                Bind.Single => Activator.CreateInstance(type),
+                Bind.Transient => null,
+                _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+            };
+            instanceContainer[type] = new ServiceObject(instance,mode);
         }
 
-        public void Register<TClass, TInterface>(Bind mode = Bind.Single)
+        public void Register<T>(T instance) where T : class
+        {
+            instanceContainer[typeof(T)] = new ServiceObject(instance,Bind.Single);
+        }
+
+        public void Register(Type type, object instance)
+        {
+            instanceContainer[type] = new ServiceObject(instance,Bind.Single);
+        }
+
+        public void Register<TClass, TInterface>(Bind mode = Bind.Single) where TClass : class
         {
             var instance = mode switch
             {
                 Bind.Single => Activator.CreateInstance<TClass>(),
-                Bind.Transient => default,
+                Bind.Transient => null,
                 _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
             };
-            instanceContainer[typeof(TInterface)] = new ServiceObject(new WeakReference<object>(instance),mode);
+            instanceContainer[typeof(TInterface)] = new ServiceObject(instance,mode);
         }
-
-        public T Resolve<T>()
+        public T Resolve<T>() where T : class
         {
             if(instanceContainer.TryGetValue(typeof(T), out var service))
             {
                 return service.mode switch
                 {
-                    Bind.Single => service.@ref.TryGetTarget(out var obj) ? (T)obj: default,
+                    Bind.Single => service.@ref as T,
                     Bind.Transient => Activator.CreateInstance<T>(),
                     _ => default
                 };
@@ -49,41 +68,60 @@ namespace UniServiceLocator
 
             return default;
         }
-
-        /// <summary>
-        /// Disposes of all IDisposable when disposed.
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        
+        void IDisposable.Dispose()
         {
-            if(!disposing || isDisposed) return;
-            
             foreach(var instance in instanceContainer)
             {
-                if(!instance.Value.@ref.TryGetTarget(out var obj)) continue;
-                
-                if(obj is IDisposable disposable) disposable.Dispose();
+                if(instance.Value.@ref is IDisposable disposable) disposable.Dispose();
             }
             instanceContainer.Clear();
         }
 
-        public void Dispose()
-        {
-            if(isDisposed) return;
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        
         private readonly struct ServiceObject
         {
-            public readonly WeakReference<object> @ref;
+            public readonly object @ref;
             public readonly Bind mode;
 
-            public ServiceObject(WeakReference<object> @ref, Bind mode)
+            public ServiceObject(object @ref, Bind mode)
             {
                 this.@ref = @ref;
                 this.mode = mode;
             }
         }
+    }
+
+    public interface IServiceLocator : IServiceLocatorRegister,IServiceLocatorResolver, IDisposable
+    {
+    }
+
+    public partial interface IServiceLocatorRegister
+    {
+        void Register<T>(Bind mode = Bind.Single) where T : class;
+        void Register(Type type, Bind mode = Bind.Single);
+        void Register<T>(T instance) where T : class;
+        void Register(Type type, object instance);
+        void Register<TClass, TInterface>(Bind mode = Bind.Single) where TClass : class;
+    }
+
+    public interface IServiceLocatorResolver
+    {
+        T Resolve<T>() where T : class;
+    }
+
+    /// <summary>
+    /// バインド方法
+    /// </summary>
+    public enum Bind
+    {
+        /// <summary>
+        /// シングルトン
+        /// </summary>
+        Single,
+
+        /// <summary>
+        /// 解決するとき都度インスタンスを作る
+        /// </summary>
+        Transient
     }
 }

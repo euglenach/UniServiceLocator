@@ -49,6 +49,12 @@ namespace UniServiceLocator
             Destroy(gameObject);
         }
 
+        void OnDestroy()
+        {
+            Locator.Dispose();
+            _inst = null;
+        }
+
         private void InstallBinding()
         {
             if(installers == null) return;
